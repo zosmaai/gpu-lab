@@ -103,13 +103,47 @@ Everything was burning bright
 
 The model responds to these markers and will attempt to create musical structure that matches (verse sections, chorus hooks, bridges, etc.).
 
-## Required Custom Node
+## Setup
+
+### Custom Node
 
 | Custom Node | Purpose |
 |---|---|
-| [ComfyUI_ACE-Step](https://github.com/lks-ai/ComfyUI_ACE-Step) | ACE-Step audio generation nodes (TextEncode, VAEDecodeAudio, SaveAudioMP3) |
+| [ComfyUI_ACE-Step](https://github.com/billwuhao/ComfyUI_ACE-Step) | ACE-Step audio generation nodes (TextEncode, VAEDecodeAudio, SaveAudioMP3) |
 
-Install via ComfyUI Manager or clone into the `custom_nodes/` directory.
+```bash
+POD=$(kubectl -n comfyui get pod -l app=comfyui -o jsonpath='{.items[0].metadata.name}')
+
+kubectl exec -n comfyui $POD -- bash -c '
+  cd /workspace/custom_nodes &&
+  git clone https://github.com/billwuhao/ComfyUI_ACE-Step.git &&
+  cd ComfyUI_ACE-Step &&
+  /comfy/mnt/venv/bin/pip install -r requirements.txt
+'
+```
+
+Restart the pod after installing:
+
+```bash
+kubectl -n comfyui rollout restart deployment comfyui
+```
+
+### Model Downloads
+
+```bash
+# ACE-Step 1.5 Turbo AIO (9.4 GB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/checkpoints &&
+  wget -q -c -O /workspace/models/checkpoints/ace_step_1.5_turbo_aio.safetensors \
+    "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/checkpoints/ace_step_1.5_turbo_aio.safetensors"
+'
+
+# (Optional) ACE-Step v1 (7.2 GB) — older model, still useful for comparison
+kubectl exec -n comfyui $POD -- bash -c '
+  wget -q -c -O /workspace/models/checkpoints/ace_step_v1_3.5b.safetensors \
+    "https://huggingface.co/Comfy-Org/ACE-Step_ComfyUI_repackaged/resolve/main/all_in_one/ace_step_v1_3.5b.safetensors"
+'
+```
 
 ## Directory Structure
 

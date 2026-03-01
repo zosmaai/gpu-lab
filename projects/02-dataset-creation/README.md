@@ -123,20 +123,74 @@ The workflow depends on several ComfyUI custom nodes that must be installed befo
 | [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) | Auxiliary preprocessing for pose/depth |
 | [rgthree-comfy](https://github.com/rgthree/rgthree-comfy) | Quality-of-life workflow utilities |
 
-Install via ComfyUI Manager or clone directly into the `custom_nodes/` directory.
+### Installing Custom Nodes
+
+```bash
+POD=$(kubectl -n comfyui get pod -l app=comfyui -o jsonpath='{.items[0].metadata.name}')
+
+# Batch install (GGUF, KJNodes, ControlNet Aux, rgthree)
+kubectl exec -n comfyui $POD -- bash -c '
+  cd /workspace/custom_nodes &&
+  git clone https://github.com/city96/ComfyUI-GGUF.git &&
+  git clone https://github.com/kijai/ComfyUI-KJNodes.git &&
+  git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git &&
+  git clone https://github.com/rgthree/rgthree-comfy.git
+'
+
+# Florence2 (needs pip dependencies: timm, peft, accelerate)
+kubectl exec -n comfyui $POD -- bash -c '
+  cd /workspace/custom_nodes &&
+  git clone https://github.com/kijai/ComfyUI-Florence2.git &&
+  cd ComfyUI-Florence2 &&
+  /comfy/mnt/venv/bin/pip install -r requirements.txt
+'
+
+# Restart pod to load new nodes
+kubectl -n comfyui rollout restart deployment comfyui
+```
+
+### Downloading Models
+
+```bash
+# Qwen Image Edit GGUF (14 GB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/unet/gguf &&
+  wget -q -c -O /workspace/models/unet/gguf/Qwen-Image-Edit-2509-Q5_0.gguf \
+    "https://huggingface.co/QuantStack/Qwen-Image-Edit-2509-GGUF/resolve/main/Qwen-Image-Edit-2509-Q5_0.gguf"
+'
+
+# CLIP encoder (8.7 GB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/clip/qwen &&
+  wget -q -c -O /workspace/models/clip/qwen/qwen_2.5_vl_7b_fp8_scaled.safetensors \
+    "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+'
+
+# VAE (243 MB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/vae/qwen &&
+  wget -q -c -O /workspace/models/vae/qwen/qwen_image_vae.safetensors \
+    "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+'
+
+# Lightning LoRA for 4-step generation (811 MB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/loras/qwen &&
+  wget -q -c -O /workspace/models/loras/qwen/Qwen-Image-Lightning-4steps-V2.0.safetensors \
+    "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Lightning-4steps-V2.0-bf16.safetensors"
+'
+
+# 4x-UltraSharp upscaler (67 MB)
+kubectl exec -n comfyui $POD -- bash -c '
+  mkdir -p /workspace/models/upscale_models &&
+  wget -q -c -O /workspace/models/upscale_models/4x-UltraSharp.pth \
+    "https://huggingface.co/madriss/chkpts/resolve/main/ComfyUI/models/upscale_models/4x-UltraSharp.pth"
+'
+```
+
+Florence2 (`microsoft/Florence-2-base`) downloads automatically on first workflow run — no manual download needed.
 
 ## Usage
-
-### Prerequisites
-
-1. ComfyUI with the custom nodes listed above
-2. Model files:
-   - `Qwen-Image-Edit-2509-Q5_0.gguf` (GGUF-quantized Qwen Image Edit)
-   - `qwen_2.5_vl_7b_fp8_scaled.safetensors` (CLIP encoder)
-   - `qwen_image_vae.safetensors` (VAE)
-   - `Qwen-Image-Lightning-4steps-V2.0.safetensors` (Lightning LoRA for 4-step generation)
-   - `4x-UltraSharp.pth` (upscale model)
-   - `Florence-2-base` (auto-captioning model, downloaded automatically)
 
 ### Running the Pipeline
 
