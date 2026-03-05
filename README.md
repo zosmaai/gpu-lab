@@ -49,7 +49,7 @@ A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I b
 | 01 | [LoRA Training](projects/01-lora-training/) | Done | FLUX.1-dev OOM → SDXL pivot → 10k-step LoRA on custom character |
 | 02 | [Dataset Creation](projects/02-dataset-creation/) | Done | ComfyUI pipeline: Qwen Image Edit + Florence2 auto-captioning |
 | 03 | [Music Generation](projects/03-music-generation/) | Done | ACE-Step 1.5 music generation via ComfyUI |
-| 04 | [Multi-Token Prediction](projects/04-multi-token-prediction/) | Planned | MTP via Self-Distillation — next project |
+| 04 | [Multi-Token Prediction](projects/04-multi-token-prediction/) | Done | MTP via Self-Distillation on single RTX 5090 (1.8x speedup) |
 
 ## Documentation
 
@@ -82,7 +82,7 @@ A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I b
 
 ## Roadmap
 
-- [ ] **Multi-Token Prediction** — Implement MTP via Self-Distillation
+- [x] **Multi-Token Prediction** — Reproduced MTP via Self-Distillation ([model](https://huggingface.co/celestialcreator/Llama-3.2-1B-MTP-k8))
 - [ ] **HuggingFace Publishing** — Publish LoRA adapter with proper model card
 - [ ] **Multi-node Kubernetes** — Scale beyond single server
 - [ ] **Automated training pipelines** — CronJob-based retraining workflows
@@ -99,7 +99,7 @@ gpu-lab/
 │   ├── 01-lora-training/    # LoRA fine-tuning on SDXL
 │   ├── 02-dataset-creation/ # Training dataset pipeline
 │   ├── 03-music-generation/ # ACE-Step music generation
-│   └── 04-multi-token-prediction/  # (Planned)
+│   └── 04-multi-token-prediction/  # MTP reproduction (Done)
 ├── model-cards/             # HuggingFace model card templates
 └── assets/                  # Screenshots and diagrams
 ```
