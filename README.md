@@ -4,7 +4,7 @@ Hands-on AI/ML infrastructure on a single Debian server with Kubernetes and cons
 
 ## What This Is
 
-A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I built everything on a single physical server: Kubernetes, multi-GPU management, model training pipelines, and creative AI workflows. Each project is a self-contained learning module that documents the full journey — including the failures.
+A learning lab for AI/ML on consumer hardware. Instead of cloud GPU rentals, everything runs on a single physical server: Kubernetes, multi-GPU management, model training pipelines, RL reasoning, and creative AI workflows. Each project is a self-contained module that documents the full journey — including the failures.
 
 ## Hardware
 
@@ -22,24 +22,28 @@ A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I b
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  Debian 13 — Kernel 6.12 — NVIDIA Driver 590.48     │
-│                                                      │
-│  ┌─────────────────────────────────────────────────┐ │
-│  │  Kubernetes v1.35.0 (kubeadm, single-node)      │ │
-│  │  CNI: Cilium 1.18.5                              │ │
-│  │  GPU: NVIDIA Device Plugin 0.17.1                │ │
-│  │                                                   │ │
-│  │  ┌──────────────┐  ┌──────────────────────────┐  │ │
-│  │  │  AI-Toolkit  │  │  ComfyUI                 │  │ │
-│  │  │  (RTX 5090)  │  │  (scheduler-assigned)    │  │ │
-│  │  │  LoRA train  │  │  Image gen, music gen,   │  │ │
-│  │  │  :30675      │  │  dataset creation :30188 │  │ │
-│  │  └──────────────┘  └──────────────────────────┘  │ │
-│  └─────────────────────────────────────────────────┘ │
-│                                                      │
-│  GPU 0: RTX 3080 ─── GPU 1: RTX 2070S ─── GPU 2: RTX 5090  │
-└─────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  Debian 13 — Kernel 6.12 — NVIDIA Driver 590.48          │
+│                                                           │
+│  ┌────────────────────────────────────────────────────┐   │
+│  │  Kubernetes v1.35.0 (kubeadm, single-node)         │   │
+│  │  CNI: Cilium 1.18.5 | GPU: NVIDIA Device Plugin    │   │
+│  │                                                     │   │
+│  │  ┌─────────────┐ ┌─────────────┐ ┌──────────────┐  │   │
+│  │  │ Training    │ │ Inference   │ │ Services     │  │   │
+│  │  │ Jobs        │ │ Jobs        │ │              │  │   │
+│  │  │ - SFT/GRPO  │ │ - Eval      │ │ - ChatterBox │  │   │
+│  │  │ - LoRA      │ │ - Benchmark │ │ - ComfyUI    │  │   │
+│  │  │ - MTP       │ │             │ │              │  │   │
+│  │  └──────┬──────┘ └──────┬──────┘ └──────┬───────┘  │   │
+│  └─────────┼───────────────┼───────────────┼──────────┘   │
+│            │               │               │               │
+│  ┌─────────▼───┐  ┌───────▼─────┐  ┌──────▼──────┐       │
+│  │  RTX 5090   │  │  RTX 5090   │  │  RTX 3080   │       │
+│  │  32GB VRAM  │  │  32GB VRAM  │  │  10GB VRAM  │       │
+│  │  Training   │  │  Eval       │  │  Inference  │       │
+│  └─────────────┘  └─────────────┘  └─────────────┘       │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Projects
@@ -49,7 +53,8 @@ A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I b
 | 01 | [LoRA Training](projects/01-lora-training/) | Done | FLUX.1-dev OOM → SDXL pivot → 10k-step LoRA on custom character |
 | 02 | [Dataset Creation](projects/02-dataset-creation/) | Done | ComfyUI pipeline: Qwen Image Edit + Florence2 auto-captioning |
 | 03 | [Music Generation](projects/03-music-generation/) | Done | ACE-Step 1.5 music generation via ComfyUI |
-| 04 | [Multi-Token Prediction](projects/04-multi-token-prediction/) | Done | MTP via Self-Distillation on single RTX 5090 (1.8x speedup) |
+| 04 | [Multi-Token Prediction](projects/04-multi-token-prediction/) | Done | Reproduced Meta's MTP paper on single RTX 5090 (1.8x inference speedup) |
+| 05 | [GRPO Reasoning](projects/05-grpo-reasoning/) | Done | Taught Qwen3.5-0.8B to reason like DeepSeek-R1 (+5.9pp zero-shot GSM8K) |
 
 ## Documentation
 
@@ -80,10 +85,18 @@ A learning lab for AI/ML infrastructure. Instead of using cloud GPU rentals, I b
 - **Training**: [AI-Toolkit](https://github.com/ostris/ai-toolkit) (ostris)
 - **Workflows**: [ComfyUI](https://github.com/comfyanonymous/ComfyUI) 1.38.13
 
+## Published Models
+
+| Model | Description | Link |
+|-------|-------------|------|
+| Llama-3.2-1B-MTP-k8 | Multi-Token Prediction reproduction (1.8x speedup) | [HuggingFace](https://huggingface.co/celestialcreator/Llama-3.2-1B-MTP-k8) |
+| Qwen3.5-0.8B-GRPO-Math | GRPO reasoning training (+5.9pp zero-shot GSM8K) | [HuggingFace](https://huggingface.co/celestialcreator/Qwen3.5-0.8B-GRPO-Math) |
+
 ## Roadmap
 
-- [x] **Multi-Token Prediction** — Reproduced MTP via Self-Distillation ([model](https://huggingface.co/celestialcreator/Llama-3.2-1B-MTP-k8))
-- [ ] **HuggingFace Publishing** — Publish LoRA adapter with proper model card
+- [x] **Multi-Token Prediction** — Reproduced MTP via Self-Distillation (1.8x inference speedup)
+- [x] **GRPO Reasoning** — SFT + GRPO on Qwen3.5-0.8B, zero-shot GSM8K 52.1% → 58.0%
+- [ ] **Model Abliteration** — Remove refusals from multimodal models for domain-specific use
 - [ ] **Multi-node Kubernetes** — Scale beyond single server
 - [ ] **Automated training pipelines** — CronJob-based retraining workflows
 
@@ -99,7 +112,8 @@ gpu-lab/
 │   ├── 01-lora-training/    # LoRA fine-tuning on SDXL
 │   ├── 02-dataset-creation/ # Training dataset pipeline
 │   ├── 03-music-generation/ # ACE-Step music generation
-│   └── 04-multi-token-prediction/  # MTP reproduction (Done)
+│   ├── 04-multi-token-prediction/  # MTP paper reproduction
+│   └── 05-grpo-reasoning/   # GRPO reasoning training (DeepSeek-R1 technique)
 ├── model-cards/             # HuggingFace model card templates
 └── assets/                  # Screenshots and diagrams
 ```

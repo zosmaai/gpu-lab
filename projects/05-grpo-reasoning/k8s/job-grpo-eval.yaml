@@ -27,20 +27,12 @@ spec:
           # Eval: GRPO checkpoint-15900 (epoch 2.13)
           GRPO_MODEL=/workspace/grpo-output/checkpoint-15900
 
-          echo "=== Eval 1: GRPO (8-shot CoT) ==="
+          echo "=== Eval: GRPO 8-shot CoT (with <think> formatted examples) ==="
           python3 -u /opt/grpo/scripts/eval_gsm8k.py \
             --model_name ${GRPO_MODEL} \
-            --output_file ${OUTPUT_BASE}/grpo_8shot.json \
+            --output_file ${OUTPUT_BASE}/grpo_8shot_think.json \
             --batch_size 1 \
-            2>&1 | tee ${OUTPUT_BASE}/grpo_8shot.log
-
-          echo "=== Eval 2: GRPO (zero-shot) ==="
-          python3 -u /opt/grpo/scripts/eval_gsm8k.py \
-            --model_name ${GRPO_MODEL} \
-            --output_file ${OUTPUT_BASE}/grpo_0shot.json \
-            --zero_shot \
-            --batch_size 1 \
-            2>&1 | tee ${OUTPUT_BASE}/grpo_0shot.log
+            2>&1 | tee ${OUTPUT_BASE}/grpo_8shot_think.log
 
           # Print comparison
           echo ""

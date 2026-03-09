@@ -12,8 +12,18 @@ Teaching Qwen3.5-0.8B to reason using **GRPO (Group Relative Policy Optimization
 | Qwen3.5-0.8B (baseline) | 53.5% | 52.1% | Pre-trained model, no fine-tuning |
 | + SFT only | not evaluated | not evaluated | Teaches `<think>` format (see Lessons below) |
 | **+ SFT + GRPO (ours)** | 50.4% (-3.1pp) | **58.0% (+5.9pp)** | Internalized reasoning ability |
+| + SFT + GRPO (8-shot `<think>` aligned) | 34.1% (-19.4pp) | — | Format-aligned few-shot hurts even more |
 
-The model was trained to reason using `<think>` tags. Zero-shot performance improved by **+5.9 percentage points** — the model internalized step-by-step reasoning and no longer needs few-shot examples. The 8-shot CoT score dropped by 3.1pp because few-shot examples conflict with the model's learned `<think>` tag reasoning format.
+### Key Finding: Demonstration → Policy Shift
+
+GRPO training shifted the model from **demonstration-based reasoning** (learns from examples) to **policy-based reasoning** (has its own internal reasoning strategy).
+
+After training, the model:
+- **Performs best in zero-shot** — it reasons autonomously using `<think>` tags
+- **Is hurt by few-shot examples** — any demonstrations conflict with its learned policy
+- **Is hurt even more by format-aligned few-shot** — `<think>` tags in examples caused the model to confuse context with generation, dropping to 34.1%
+
+This is a behavioral shift, not a regression. The model no longer needs (or wants) demonstrations.
 
 > **Note:** We did not evaluate the SFT-only checkpoint separately, so we cannot isolate SFT's contribution from GRPO's. See [Lessons Learned](#lessons-learned) for honest analysis.
 
@@ -106,6 +116,7 @@ kubectl logs -f job/grpo-eval
 - **GRPO improved zero-shot reasoning** — +5.9pp on GSM8K zero-shot, showing the model internalized step-by-step thinking
 - **Format + correctness rewards together** — the 0.3 bonus for `<think>` tags + 0.2 for `####` format helped the model learn structured reasoning alongside math accuracy
 - **Single consumer GPU is viable** — full SFT + GRPO pipeline ran on one RTX 5090 with room to spare (~10-12 GB used out of 32 GB)
+- **Demonstration → Policy shift** — GRPO fundamentally changed how the model reasons. It shifted from relying on few-shot demonstrations to having its own internal reasoning policy. This is exactly what DeepSeek-R1 demonstrated at scale.
 
 ### What we'd do differently
 - **Eval after SFT** — We skipped evaluating the SFT-only checkpoint. Without this, we can't tell if SFT helped or hurt baseline performance before GRPO. In hindsight, this is a critical missing data point. If SFT already degraded 8-shot performance (by overwriting the model's few-shot ability with `<think>` format), then the 8-shot drop may be from SFT, not GRPO.
@@ -115,7 +126,7 @@ kubectl logs -f job/grpo-eval
 ### Technical findings
 - **Qwen3.5-0.8B uses DeltaNet** (hybrid Gated DeltaNet + Gated Attention). Install `flash-linear-attention` + `causal-conv1d` for fast generation — without FLA, torch fallback is ~10x slower.
 - **SDPA is faster than FLA for inference** (3.6x on first call). Use `attn_implementation="sdpa"` for eval.
-- **Zero-shot is the right eval for RL-trained reasoning models** — few-shot examples conflict with learned `<think>` tag patterns, making 8-shot an unfair comparison.
+- **Zero-shot is the right eval for RL-trained reasoning models** — few-shot examples conflict with learned `<think>` tag patterns, making 8-shot an unfair comparison. Even format-aligned `<think>` few-shot examples made things worse (34.1%), suggesting the model confuses example `<think>` tags with its own generation context.
 - **Rewards plateau around epoch 1.2** — math_reward stabilized at ~0.45-0.53, suggesting diminishing returns beyond 2 epochs for this model size.
 
 ## VRAM Budget (~10-12 GB on RTX 5090)
