@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: axon-export
+  namespace: default
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: axon-export
+        image: localhost:5000/axon-finetune:latest
+        imagePullPolicy: Always
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -ex
+
+          echo "=== ONNX Export + Push to HuggingFace ==="
+          python3 -u /opt/scripts/merge_and_export.py
+
+          echo "=== Done ==="
+        env:
+        - name: HF_TOKEN
+          value: "${HF_TOKEN}"
+        - name: HF_HOME
+          value: /workspace/hf_cache
+        - name: LORA_PATH
+          value: /workspace/lora-adapter
+        - name: MERGED_PATH
+          value: /workspace/merged
+        - name: ONNX_PATH
+          value: /workspace/onnx
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: ${GPU_UUID}
+        resources:
+          requests:
+            memory: 10Gi
+            nvidia.com/gpu: "1"
+          limits:
+            memory: 14Gi
+            nvidia.com/gpu: "1"
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: scripts
+          mountPath: /opt/scripts
+          readOnly: true
+        - name: dshm
+          mountPath: /dev/shm
+      volumes:
+      - name: workspace
+        hostPath:
+          path: /home/akshay/axon-workspace
+          type: DirectoryOrCreate
+      - name: scripts
+        hostPath:
+          path: /home/akshay/gpu-lab/projects/07-axon-finetune/scripts
+          type: Directory
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi

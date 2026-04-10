@@ -65,7 +65,8 @@ A learning lab for AI/ML on consumer hardware. Instead of cloud GPU rentals, eve
 | 03 | [Music Generation](projects/03-music-generation/) | Done | ACE-Step 1.5 music generation via ComfyUI |
 | 04 | [Multi-Token Prediction](projects/04-multi-token-prediction/) | Done | Reproduced Meta's MTP paper on single RTX 5090 (1.8x inference speedup) |
 | 05 | [GRPO Reasoning](projects/05-grpo-reasoning/) | Done | Taught Qwen3.5-0.8B to reason like DeepSeek-R1 (+5.9pp zero-shot GSM8K) |
-| 06 | [TurboQuant KV Cache](projects/06-turboquant/) | In Progress | Google's TurboQuant on consumer GPUs — 3.25x more context for Qwen3.5-27B |
+| 06 | [TurboQuant KV Cache](projects/06-turboquant/) | Done | Google's TurboQuant on consumer GPUs — 3.25x more context for Qwen3.5-27B |
+| 07 | [Axon Fine-Tune](projects/07-axon-finetune/) | Done | LoRA fine-tuned SmolLM2-360M for browser AI portfolio assistant (WebGPU) |
 
 ## Documentation
 
@@ -103,6 +104,7 @@ A learning lab for AI/ML on consumer hardware. Instead of cloud GPU rentals, eve
 |-------|-------------|------|
 | Llama-3.2-1B-MTP-k8 | Multi-Token Prediction reproduction (1.8x speedup) | [HuggingFace](https://huggingface.co/celestialcreator/Llama-3.2-1B-MTP-k8) |
 | Qwen3.5-0.8B-GRPO-Math | GRPO reasoning training (+5.9pp zero-shot GSM8K) | [HuggingFace](https://huggingface.co/celestialcreator/Qwen3.5-0.8B-GRPO-Math) |
+| axon-smollm2-360m | Browser AI portfolio assistant (WebGPU + Transformers.js) | [HuggingFace](https://huggingface.co/celestialcreator/axon-smollm2-360m) |
 
 ## Roadmap
 
@@ -127,7 +129,8 @@ gpu-lab/
 │   ├── 03-music-generation/ # ACE-Step music generation
 │   ├── 04-multi-token-prediction/  # MTP paper reproduction
 │   ├── 05-grpo-reasoning/   # GRPO reasoning training (DeepSeek-R1 technique)
-│   └── 06-turboquant/       # TurboQuant KV cache compression (Google, ICLR 2026)
+│   ├── 06-turboquant/       # TurboQuant KV cache compression (Google, ICLR 2026)
+│   └── 07-axon-finetune/    # LoRA fine-tuned SmolLM2-360M for browser AI assistant
 ├── model-cards/             # HuggingFace model card templates
 └── assets/                  # Screenshots and diagrams
 ```
